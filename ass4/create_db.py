@@ -32,6 +32,7 @@ def main():
     return
 
 
+# method that is responsible to insert the tuple to students table
 def insert_student(conn, params):
     for i in range (len(params)):
         params[i] = remove_spaces(params[i])
@@ -41,6 +42,7 @@ def insert_student(conn, params):
         conn.commit()
 
 
+# method that is responsible to insert the tuple to courses table
 def insert_course(conn, params):
     for i in range (len(params)):
         params[i] = remove_spaces(params[i])
@@ -51,6 +53,7 @@ def insert_course(conn, params):
         conn.commit()
 
 
+# method that is responsible to insert the tuple to classrooms table
 def insert_classroom(conn, params):
     for i in range (len(params)):
         params[i] = remove_spaces(params[i])
@@ -61,6 +64,7 @@ def insert_classroom(conn, params):
         conn.commit()
 
 
+# method that is responsible to remove spaces from a tuple
 def remove_spaces(word):
     first_index=-1
     second_index=-1
@@ -74,6 +78,8 @@ def remove_spaces(word):
     word=word[first_index:second_index+1]
     return word
 
+
+# method that is responsible to remove create the database if it's not exists
 def create_db():
     try:
         conn = sqlite3.connect('schedule.db')
@@ -83,6 +89,7 @@ def create_db():
     return None
 
 
+# method that is responsible to create tables if they are not exists
 def create_tables(conn):
     conn.executescript(""" 
         CREATE TABLE IF NOT EXISTS courses (
@@ -108,6 +115,7 @@ def create_tables(conn):
     """)
 
 
+# method that is responsible to print the database
 def print_db(conn):
     print("courses")
     print_table(conn.execute("select * from courses"))
@@ -117,10 +125,12 @@ def print_db(conn):
     print_table(conn.execute("select * from students"))
 
 
+# method that is responsible to print a table
 def print_table(list_of_tuples):
     for item in list_of_tuples:
         print(item)
 
 
+# calls to the main function
 if __name__ == "__main__":
     main()

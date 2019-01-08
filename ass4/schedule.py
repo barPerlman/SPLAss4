@@ -4,7 +4,6 @@ import sqlite3
 
 def main():
     # create connection
-
     conn = create_db()
     cursor = conn.cursor()
     count_iteration = 0
@@ -13,7 +12,6 @@ def main():
         i=0
         while i<len(list):
             curr_class = total_table(conn)[i]
-            # if timeLeft is zero
             if curr_class is not None:
                 if curr_class[9] == 0:
                     # prints the command
@@ -30,10 +28,13 @@ def main():
                     # if course is done
                     if curr_class[9]-1 == 0:
                         print('({}) {}: {} is done'.format(count_iteration, curr_class[7], curr_class[1]))
+                        # update the current_course_id in the current classroom
                         conn.execute("UPDATE classrooms SET current_course_id=? WHERE id=?", [0, curr_class[6]])
                         conn.commit()
+                        # update the current_course_time_left in the current classroom
                         conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id=?", [0, curr_class[6]])
                         conn.commit()
+                        # delete the course in the courses table
                         conn.execute("DELETE FROM courses WHERE class_id=? and id=?", [curr_class[4],curr_class[0]])
                         conn.commit()
                         list=total_table(cursor)
@@ -41,19 +42,17 @@ def main():
                     else :
                         # prints the command
                         print('({}) {}: occupied by {}'.format(count_iteration, curr_class[7], curr_class[1]))
+                        # update the current_course_time_left in the current classroom
                         conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id = ?",
                                      [curr_class[9] - 1, curr_class[6]])
                         conn.commit()
                 i=i+1
+        # prints the database
         print_db(conn)
         count_iteration=count_iteration+1
 
 
-def print_table(list_of_tuples):
-    for item in list_of_tuples:
-        print(item)
-
-
+# method that is responsible to print the database
 def print_db(conn):
     print("courses")
     print_table(conn.execute("select * from courses"))
@@ -63,18 +62,19 @@ def print_db(conn):
     print_table(conn.execute("select * from students"))
 
 
-def check_if_id_exist(id, classrooms_list):
-    for curr_class in classrooms_list:
-        if curr_class[0] == id:
-            return curr_class
-    return None
+# method that is responsible to print a table
+def print_table(list_of_tuples):
+    for item in list_of_tuples:
+        print(item)
 
 
+# method that is responsible to return the current courses that are in handel
 def total_table(cursor):
     return cursor.execute("""SELECT * FROM courses as c INNER JOIN classrooms as cr ON c.class_id=cr.id WHERE NOT 
         EXISTS (SELECT * FROM courses WHERE class_id=c.class_id AND id<c.id) ORDER BY class_id""").fetchall()
 
 
+# method that is responsible to remove create the database if it's not exists
 def create_db():
     try:
         conn = sqlite3.connect('schedule.db')
@@ -84,5 +84,6 @@ def create_db():
     return None
 
 
+# calls to the main function
 if __name__ == "__main__":
     main()
