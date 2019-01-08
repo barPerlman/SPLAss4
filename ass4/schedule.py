@@ -4,10 +4,11 @@ import sqlite3
 
 def main():
     # create connection
-    conn = sqlite3.connect('classes.db')
+
+    conn = create_db()
     cursor = conn.cursor()
     count_iteration = 0
-    while os.path.isfile('classes.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
+    while os.path.isfile('schedule.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
         list = total_table(cursor)
         i=0
         while i<len(list):
@@ -72,6 +73,15 @@ def check_if_id_exist(id, classrooms_list):
 def total_table(cursor):
     return cursor.execute("""SELECT * FROM courses as c INNER JOIN classrooms as cr ON c.class_id=cr.id WHERE NOT 
         EXISTS (SELECT * FROM courses WHERE class_id=c.class_id AND id<c.id) ORDER BY class_id""").fetchall()
+
+
+def create_db():
+    try:
+        conn = sqlite3.connect('schedule.db')
+        return conn
+    except sqlite3.Error as e:
+        print(e)
+    return None
 
 
 if __name__ == "__main__":
