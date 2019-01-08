@@ -5,36 +5,46 @@ import sqlite3
 def main():
     # create connection
     conn = sqlite3.connect('classes.db')
+    cursor = conn.cursor()
     count_iteration = 0
-    while os.path.isfile('classes.db') & conn.execute("select * from courses").arraysize != 0:
-        for course in total_table(conn):
-            curr_class = check_if_id_exist(course[0], total_table(conn))
+    while os.path.isfile('classes.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
+        list = total_table(cursor)
+        i=0
+        while i<len(list):
+            curr_class = total_table(conn)[i]
             # if timeLeft is zero
-            if curr_class[3] == 0:
-                # prints the command
-                print('({}) {}: {} is schedule to start'.format(count_iteration, curr_class[1], course[1]))
-                # update the current_course_id and the current_course_time_left in the current course
-                conn.execute("update classrooms set current_course_id=?,current_course_time_left=? where id=?",
-                             course[0], course[5], curr_class[0])
-                conn.commit()
-                # update the count in the current student type
-                student = conn.execute("select * from students where grade=?", course[2])
-                conn.execute("update students set count=? where grade=?", student[1]-course[3], course[2])
-                conn.commit()
-            else:
-                # prints the command
-                print('({}) {}: occupied by {}'.format(count_iteration, curr_class[1], course[1]))
-                conn.execute("update classrooms set current_course_time_left=? where id = ?", course[5]-1, curr_class[0])
-                conn.commit()
-                # if course is done
-                if course[5] == 0:
-                    print('({}) {}: {} is done'.format(count_iteration, curr_class[1], course[1]))
-                    conn.execute("update classrooms set current_course_id=? where id=?", 0, curr_class[0])
+            if curr_class is not None:
+                if curr_class[9] == 0:
+                    # prints the command
+                    print('({}) {}: {} is schedule to start'.format(count_iteration, curr_class[7], curr_class[1]))
+                    # update the current_course_id and the current_course_time_left in the current course
+                    conn.execute("UPDATE classrooms SET current_course_id=?,current_course_time_left=? WHERE id=?",
+                                 [curr_class[0], curr_class[5], curr_class[6]])
                     conn.commit()
-                    conn.execute("delete from courses where id=?", course[0])
+                    # update the count in the current student type
+                    student = conn.cursor().execute("SELECT * FROM students WHERE grade=?", (curr_class[2],)).fetchone()
+                    conn.execute("UPDATE students SET count=? WHERE grade=?", [student[1]-curr_class[3], curr_class[2]])
                     conn.commit()
-
-            print_db(conn)
+                else:
+                    # if course is done
+                    if curr_class[9]-1 == 0:
+                        print('({}) {}: {} is done'.format(count_iteration, curr_class[7], curr_class[1]))
+                        conn.execute("UPDATE classrooms SET current_course_id=? WHERE id=?", [0, curr_class[6]])
+                        conn.commit()
+                        conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id=?", [0, curr_class[6]])
+                        conn.commit()
+                        conn.execute("DELETE FROM courses WHERE class_id=? and id=?", [curr_class[4],curr_class[0]])
+                        conn.commit()
+                        list=total_table(cursor)
+                        i=i-1
+                    else :
+                        # prints the command
+                        print('({}) {}: occupied by {}'.format(count_iteration, curr_class[7], curr_class[1]))
+                        conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id = ?",
+                                     [curr_class[9] - 1, curr_class[6]])
+                        conn.commit()
+                i=i+1
+        print_db(conn)
         count_iteration=count_iteration+1
 
 
@@ -54,13 +64,14 @@ def print_db(conn):
 
 def check_if_id_exist(id, classrooms_list):
     for curr_class in classrooms_list:
-        if curr_class == id:
+        if curr_class[0] == id:
             return curr_class
     return None
 
 
-def total_table(conn):
-    return conn.execute("select * from courses as c join classrooms as cr on c.class_id=cr.id order by id")
+def total_table(cursor):
+    return cursor.execute("""SELECT * FROM courses as c INNER JOIN classrooms as cr ON c.class_id=cr.id WHERE NOT 
+        EXISTS (SELECT * FROM courses WHERE class_id=c.class_id AND id<c.id) ORDER BY class_id""").fetchall()
 
 
 if __name__ == "__main__":
