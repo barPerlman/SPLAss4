@@ -7,49 +7,52 @@ def main():
     conn = create_db()
     cursor = conn.cursor()
     count_iteration = 0
-    while os.path.isfile('schedule.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
-        list = total_table(cursor)
-        i=0
-        while i<len(list):
-            curr_class = total_table(conn)[i]
-            if curr_class is not None:
-                if curr_class[9] == 0:
-                    # prints the command
-                    print('({}) {}: {} is schedule to start'.format(count_iteration, curr_class[7], curr_class[1]))
-                    # update the current_course_id and the current_course_time_left in the current course
-                    conn.execute("UPDATE classrooms SET current_course_id=?,current_course_time_left=? WHERE id=?",
-                                 [curr_class[0], curr_class[5], curr_class[6]])
-                    conn.commit()
-                    # update the count in the current student type
-                    student = conn.cursor().execute("SELECT * FROM students WHERE grade=?", (curr_class[2],)).fetchone()
-                    conn.execute("UPDATE students SET count=? WHERE grade=?", [student[1]-curr_class[3], curr_class[2]])
-                    conn.commit()
-                else:
-                    # if course is done
-                    if curr_class[9]-1 == 0:
-                        print('({}) {}: {} is done'.format(count_iteration, curr_class[7], curr_class[1]))
-                        # update the current_course_id in the current classroom
-                        conn.execute("UPDATE classrooms SET current_course_id=? WHERE id=?", [0, curr_class[6]])
-                        conn.commit()
-                        # update the current_course_time_left in the current classroom
-                        conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id=?", [0, curr_class[6]])
-                        conn.commit()
-                        # delete the course in the courses table
-                        conn.execute("DELETE FROM courses WHERE class_id=? and id=?", [curr_class[4],curr_class[0]])
-                        conn.commit()
-                        list=total_table(cursor)
-                        i=i-1
-                    else :
-                        # prints the command
-                        print('({}) {}: occupied by {}'.format(count_iteration, curr_class[7], curr_class[1]))
-                        # update the current_course_time_left in the current classroom
-                        conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id = ?",
-                                     [curr_class[9] - 1, curr_class[6]])
-                        conn.commit()
-                i=i+1
-        # prints the database
+    if os.path.isfile('schedule.db') and len(conn.cursor().execute("SELECT * FROM courses").fetchall())==0:
         print_db(conn)
-        count_iteration=count_iteration+1
+    else :
+        while os.path.isfile('schedule.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
+            list = total_table(cursor)
+            i=0
+            while i<len(list):
+                curr_class = total_table(conn)[i]
+                if curr_class is not None:
+                    if curr_class[9] == 0:
+                        # prints the command
+                        print('({}) {}: {} is schedule to start'.format(count_iteration, curr_class[7], curr_class[1]))
+                        # update the current_course_id and the current_course_time_left in the current course
+                        conn.execute("UPDATE classrooms SET current_course_id=?,current_course_time_left=? WHERE id=?",
+                                     [curr_class[0], curr_class[5], curr_class[6]])
+                        conn.commit()
+                        # update the count in the current student type
+                        student = conn.cursor().execute("SELECT * FROM students WHERE grade=?", (curr_class[2],)).fetchone()
+                        conn.execute("UPDATE students SET count=? WHERE grade=?", [student[1]-curr_class[3], curr_class[2]])
+                        conn.commit()
+                    else:
+                        # if course is done
+                        if curr_class[9]-1 == 0:
+                            print('({}) {}: {} is done'.format(count_iteration, curr_class[7], curr_class[1]))
+                            # update the current_course_id in the current classroom
+                            conn.execute("UPDATE classrooms SET current_course_id=? WHERE id=?", [0, curr_class[6]])
+                            conn.commit()
+                            # update the current_course_time_left in the current classroom
+                            conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id=?", [0, curr_class[6]])
+                            conn.commit()
+                            # delete the course in the courses table
+                            conn.execute("DELETE FROM courses WHERE class_id=? and id=?", [curr_class[4],curr_class[0]])
+                            conn.commit()
+                            list=total_table(cursor)
+                            i=i-1
+                        else :
+                            # prints the command
+                            print('({}) {}: occupied by {}'.format(count_iteration, curr_class[7], curr_class[1]))
+                            # update the current_course_time_left in the current classroom
+                            conn.execute("UPDATE classrooms SET current_course_time_left=? WHERE id = ?",
+                                         [curr_class[9] - 1, curr_class[6]])
+                            conn.commit()
+                    i=i+1
+            # prints the database
+            print_db(conn)
+            count_iteration=count_iteration+1
 
 
 # method that is responsible to print the database
