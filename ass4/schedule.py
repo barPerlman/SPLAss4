@@ -1,4 +1,5 @@
 import os
+dbIsExist=os.path.isfile('schedule.db')
 import sqlite3
 
 
@@ -7,10 +8,10 @@ def main():
     conn = create_db()
     cursor = conn.cursor()
     count_iteration = 0
-    if os.path.isfile('schedule.db') and len(conn.cursor().execute("SELECT * FROM courses").fetchall())==0:
+    if dbIsExist and len(conn.cursor().execute("SELECT * FROM courses").fetchall())==0:
         print_db(conn)
     else :
-        while os.path.isfile('schedule.db') and conn.cursor().execute("SELECT * FROM courses").fetchall():
+        while dbIsExist and conn.cursor().execute("SELECT * FROM courses").fetchall():
             list = total_table(cursor)
             i=0
             while i<len(list):

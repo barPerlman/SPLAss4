@@ -2,33 +2,36 @@ import sqlite3
 import sys
 from sqlite3 import Error
 import re
+import os
+dbIsExist=os.path.isfile('schedule.db')
 
 
 def main():
     if len(sys.argv) < 1 or sys.argv[1] is None:
         print("WRONG ARGUMENTS!!!")
         return
-    # create connection
-    conn = create_db()
-    if conn is not None:
-        create_tables(conn)
-        # get the config file to read
-        conf_path = sys.argv[1]
-        file = open(conf_path)
-        content = file.read()
-        splitted = content.split("\n")
-        for line in splitted:  # insert tuple to db
-            # check which table is it
-            params = line.split(",")
-            if line != '':
-                if params[0] == 'S':
-                    insert_student(conn, params)
-                elif params[0] == 'C':
-                    insert_course(conn, params)
-                else:
-                    insert_classroom(conn, params)
-        print_db(conn)
-        conn.close()
+    if not dbIsExist:
+        # create connection
+        conn = create_db()
+        if conn is not None:
+            create_tables(conn)
+            # get the config file to read
+            conf_path = sys.argv[1]
+            file = open(conf_path)
+            content = file.read()
+            splitted = content.split("\n")
+            for line in splitted:  # insert tuple to db
+                # check which table is it
+                params = line.split(",")
+                if line != '':
+                    if params[0] == 'S':
+                        insert_student(conn, params)
+                    elif params[0] == 'C':
+                        insert_course(conn, params)
+                    else:
+                        insert_classroom(conn, params)
+            print_db(conn)
+            conn.close()
     return
 
 
